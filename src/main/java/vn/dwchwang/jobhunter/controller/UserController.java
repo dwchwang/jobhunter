@@ -6,7 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import vn.dwchwang.jobhunter.domain.User;
 import vn.dwchwang.jobhunter.service.UserService;
-import vn.dwchwang.jobhunter.service.error.IdInvalidException;
+import vn.dwchwang.jobhunter.util.error.IdInvalidException;
 
 import java.util.List;
 

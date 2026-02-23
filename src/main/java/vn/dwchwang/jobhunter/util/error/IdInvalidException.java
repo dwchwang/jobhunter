@@ -1,4 +1,4 @@
-package vn.dwchwang.jobhunter.service.error;
+package vn.dwchwang.jobhunter.util.error;
 
 public class IdInvalidException extends  Exception{
     public IdInvalidException(String message) {
