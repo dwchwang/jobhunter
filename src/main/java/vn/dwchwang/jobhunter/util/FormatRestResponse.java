@@ -11,6 +11,7 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import vn.dwchwang.jobhunter.domain.RestResponse;
+import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
 
 @ControllerAdvice
 public class FormatRestResponse implements ResponseBodyAdvice<Object> {
@@ -40,7 +41,8 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
         if (statusCode >= 400) {
             return body;
         } else {
-            restResponse.setMessage("API call successful");
+            ApiMessage message = returnType.getMethodAnnotation(ApiMessage.class);
+            restResponse.setMessage(message != null ? message.value() : "API call successful");
             restResponse.setData(body);
         }
 

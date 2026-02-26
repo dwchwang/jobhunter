@@ -1,7 +1,13 @@
 package vn.dwchwang.jobhunter.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import vn.dwchwang.jobhunter.domain.Company;
 import vn.dwchwang.jobhunter.domain.User;
+import vn.dwchwang.jobhunter.domain.dto.Meta;
+import vn.dwchwang.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.dwchwang.jobhunter.repository.UserRepository;
 
 import java.util.List;
@@ -28,8 +34,18 @@ public class UserService {
         return user.orElse(null);
     }
 
-    public List<User> handleGetAllUsers() {
-        return this.userRepository.findAll();
+    public ResultPaginationDTO handleGetAllUsers(Specification<User> spec, Pageable pageable) {
+        Page<User> pageUser = this.userRepository.findAll(spec, pageable);
+        ResultPaginationDTO userDto = new ResultPaginationDTO();
+        Meta meta = new Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+
+        meta.setPages(pageUser.getTotalPages());
+        meta.setTotal(pageUser.getTotalElements());
+        userDto.setMeta(meta);
+        userDto.setResult(pageUser.getContent());
+        return userDto;
     }
 
     public User handleUpdateUserById(long id, User inputUser) {

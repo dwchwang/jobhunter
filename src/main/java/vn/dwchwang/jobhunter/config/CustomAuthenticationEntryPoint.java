@@ -12,24 +12,32 @@ import org.springframework.stereotype.Component;
 import vn.dwchwang.jobhunter.domain.RestResponse;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final AuthenticationEntryPoint delegate = new BearerTokenAuthenticationEntryPoint();
 
     private final ObjectMapper objectMapper;
+
     public CustomAuthenticationEntryPoint(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
+            throws IOException, ServletException {
         this.delegate.commence(request, response, authException);
         response.setContentType("application/json; charset=utf-8");
 
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        restResponse.setError(authException.getCause().getMessage());
+
+        String errorMessage = Optional.ofNullable(authException.getCause())
+                                      .map(Throwable::getMessage)
+                                      .orElse("");
+        restResponse.setError(errorMessage);
+
         restResponse.setMessage("Token ko hop le");
 
         objectMapper.writeValue(response.getWriter(), restResponse);

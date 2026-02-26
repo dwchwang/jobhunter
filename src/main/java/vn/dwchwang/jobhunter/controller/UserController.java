@@ -1,16 +1,24 @@
 package vn.dwchwang.jobhunter.controller;
 
+import com.turkraft.springfilter.boot.Filter;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import vn.dwchwang.jobhunter.domain.User;
+import vn.dwchwang.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.dwchwang.jobhunter.service.UserService;
+import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
 import vn.dwchwang.jobhunter.util.error.IdInvalidException;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
+@RequestMapping("/api/v1")
 public class UserController {
 
     private final UserService userService;
@@ -36,8 +44,13 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public List<User> getAllUser() {
-        return this.userService.handleGetAllUsers();
+    @ApiMessage("Fetch All Users")
+    public ResponseEntity<ResultPaginationDTO> getAllUser(
+            @Filter Specification<User> spec,
+            Pageable pageable
+            ) {
+//
+        return ResponseEntity.ok(this.userService.handleGetAllUsers(spec, pageable));
     }
 
     @PutMapping("/users/{id}")
