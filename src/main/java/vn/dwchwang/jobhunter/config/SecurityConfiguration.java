@@ -20,8 +20,6 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import vn.dwchwang.jobhunter.util.SecurityUtil;
 
@@ -39,24 +37,19 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(
-                        authz -> authz
-                                .requestMatchers("/", "/login")
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())
-                                                      .authenticationEntryPoint(customAuthenticationEntryPoint)
-                )
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(
+                    authz -> authz
+                            .requestMatchers("/", "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                            .anyRequest().authenticated())
+                            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())
+                                                                  .authenticationEntryPoint(customAuthenticationEntryPoint))
 //                .exceptionHandling(exceptions -> exceptions
 //                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()) //401
 //                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) //403
-                .formLogin(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 
         return http.build();
@@ -71,17 +64,14 @@ public class SecurityConfiguration {
     private String jwtKey;
 
     private SecretKey getSecretKey() {
-        byte[] keyBytes = Base64.from(jwtKey)
-                                .decode();
+        byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
-                                                              getSecretKey())
-                                                      .macAlgorithm(SecurityUtil.JWT_ALGORITHM)
-                                                      .build();
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
+                                                      .macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
         return token -> {
             try {
                 return jwtDecoder.decode(token);
@@ -94,12 +84,10 @@ public class SecurityConfiguration {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new
-                JwtGrantedAuthoritiesConverter();
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("hoang");
-        JwtAuthenticationConverter jwtAuthenticationConverter = new
-                JwtAuthenticationConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }

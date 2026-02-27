@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import vn.dwchwang.jobhunter.domain.User;
+import vn.dwchwang.jobhunter.domain.dto.ResCreateUser;
+import vn.dwchwang.jobhunter.domain.dto.ResUpdateUser;
+import vn.dwchwang.jobhunter.domain.dto.ResUserDTO;
 import vn.dwchwang.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.dwchwang.jobhunter.service.UserService;
 import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
 import vn.dwchwang.jobhunter.util.error.IdInvalidException;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -31,20 +31,33 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User inputUser) {
+    @ApiMessage("Create new user")
+    public ResponseEntity<ResCreateUser> createUser(@RequestBody User inputUser) throws IdInvalidException {
+        Boolean existingUser = this.userService.handleExistsByEmail(inputUser.getEmail());
+        if(existingUser) {
+            throw new IdInvalidException(
+                    "Email " + inputUser.getEmail() + " da ton tai, hay dung email khac"
+            );
+        }
         String hashedPassword = this.passwordEncoder.encode(inputUser.getPassword());
         inputUser.setPassword(hashedPassword);
-        return ResponseEntity.ok(this.userService.handleCreateUser(inputUser));
+        this.userService.handleCreateUser(inputUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToResCreateUser(inputUser));
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable long id) {
+    @ApiMessage("Get user by id")
+    public ResponseEntity<ResUserDTO> getUserById(@PathVariable long id) throws IdInvalidException {
         User user = this.userService.handleGetUserById(id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        if(user == null) {
+            throw new IdInvalidException("User with id " + id + " not found");
+        }
+        this.userService.handleGetUserById(id);
+        return ResponseEntity.ok(this.userService.convertToResUserDTO(user));
     }
 
     @GetMapping("/users")
-    @ApiMessage("Fetch All Users")
+    @ApiMessage("Fetch all users")
     public ResponseEntity<ResultPaginationDTO> getAllUser(
             @Filter Specification<User> spec,
             Pageable pageable
@@ -53,19 +66,26 @@ public class UserController {
         return ResponseEntity.ok(this.userService.handleGetAllUsers(spec, pageable));
     }
 
-    @PutMapping("/users/{id}")
-    public User updateUser(@PathVariable long id, @RequestBody User inputUser) {
-        return this.userService.handleUpdateUserById(id, inputUser);
+    @PutMapping("/users")
+    @ApiMessage("Update user")
+    public ResponseEntity<ResUpdateUser> updateUser(@RequestBody User inputUser) throws IdInvalidException {
+        User existingUser = this.userService.handleUpdateUserById(inputUser);
+        if(existingUser == null) {
+            throw new IdInvalidException("User voi id: " + inputUser.getId() + " khong ton tai");
+        }
+        return ResponseEntity.ok(this.userService.convertToResUpdateUser(existingUser));
     }
 
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable long id) throws IdInvalidException {
-        if(id >= 1500){
-            throw new IdInvalidException("Id khong qua 1500");
+    @ApiMessage("Delete user by id")
+    public ResponseEntity<Void> deleteUser(@PathVariable long id) throws IdInvalidException {
+        User existingUser = this.userService.handleGetUserById(id);
+        if(existingUser == null) {
+            throw new IdInvalidException("User voi id: " + id + " khong ton tai");
         }
         this.userService.handleRemoveUser(id);
-        return ResponseEntity.ok("delete user with id: " + id);
+        return ResponseEntity.ok(null);
     }
 }
 

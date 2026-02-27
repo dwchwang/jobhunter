@@ -8,4 +8,6 @@ import vn.dwchwang.jobhunter.domain.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     User findByEmail(String username);
+    Boolean existsByEmail(String email);
+    User findByRefreshTokenAndEmail(String refresh_token, String email);
 }
