@@ -12,8 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import vn.dwchwang.jobhunter.domain.User;
-import vn.dwchwang.jobhunter.domain.dto.LoginDTO;
-import vn.dwchwang.jobhunter.domain.dto.RestLoginDTO;
+import vn.dwchwang.jobhunter.domain.request.ReqLoginDTO;
+import vn.dwchwang.jobhunter.domain.response.RestLoginDTO;
 import vn.dwchwang.jobhunter.service.UserService;
 import vn.dwchwang.jobhunter.util.SecurityUtil;
 import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
@@ -38,16 +38,16 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<RestLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<RestLoginDTO> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO) {
         //Nạp input gồm username/password vào Security
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                loginDTO.getUsername(), loginDTO.getPassword());
+                reqLoginDTO.getUsername(), reqLoginDTO.getPassword());
         //xác thực người dùng => cần viết hàm loadUserByUsername
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         // set thong tin nguoi dung dang nhap vao context (co the su dung sau nay)
         SecurityContextHolder.getContext().setAuthentication(authentication);
         RestLoginDTO restLoginDTO = new RestLoginDTO();
-        User currentUserDB = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+        User currentUserDB = this.userService.handleGetUserByUserName(reqLoginDTO.getUsername());
         if (currentUserDB != null) {
             RestLoginDTO.UserLogin userLogin = new RestLoginDTO.UserLogin(currentUserDB.getId(),
                                                                           currentUserDB.getName(),
@@ -60,9 +60,9 @@ public class AuthController {
         restLoginDTO.setAccessToken(access_Token);
 
         // create refresh token
-        String refresh_token = this.securityUtil.createRefreshToken(loginDTO.getUsername(), restLoginDTO);
+        String refresh_token = this.securityUtil.createRefreshToken(reqLoginDTO.getUsername(), restLoginDTO);
         //update user
-        this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
+        this.userService.updateUserToken(refresh_token, reqLoginDTO.getUsername());
 
         // set cookies
         ResponseCookie resCookie = ResponseCookie

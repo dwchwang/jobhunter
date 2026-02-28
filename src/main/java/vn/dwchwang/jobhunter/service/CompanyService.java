@@ -5,9 +5,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import vn.dwchwang.jobhunter.domain.Company;
-import vn.dwchwang.jobhunter.domain.dto.Meta;
-import vn.dwchwang.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.dwchwang.jobhunter.domain.User;
+import vn.dwchwang.jobhunter.domain.response.ResultPaginationDTO;
 import vn.dwchwang.jobhunter.repository.CompanyRepository;
+import vn.dwchwang.jobhunter.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,9 +17,11 @@ import java.util.Optional;
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
 
-    public CompanyService(CompanyRepository companyRepository) {
+    public CompanyService(CompanyRepository companyRepository, UserRepository userRepository) {
         this.companyRepository = companyRepository;
+        this.userRepository = userRepository;
     }
 
     public Company hanldeCreateCompany(Company company) {
@@ -29,7 +32,7 @@ public class CompanyService {
     public ResultPaginationDTO hanldeGetAllComapnies(Specification<Company> spec,Pageable pageable) {
         Page<Company> pageCompany = this.companyRepository.findAll(spec,pageable);
         ResultPaginationDTO dto = new ResultPaginationDTO();
-        Meta meta = new Meta();
+        ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
         meta.setPage(pageable.getPageNumber() + 1);
         meta.setPageSize(pageable.getPageSize());
 
@@ -41,6 +44,12 @@ public class CompanyService {
     }
 
     public void handleDeleteCompanyById(Long id) {
+        Optional<Company> company = this.companyRepository.findById(id);
+        if (company.isPresent()) {
+            Company com =  company.get();
+            List<User> users = this.userRepository.findByCompany(com);
+            this.userRepository.deleteAll(users);
+        }
         this.companyRepository.deleteById(id);
     }
 
@@ -57,5 +66,9 @@ public class CompanyService {
         }
 
         return null;
+    }
+
+    public Optional<Company> findById(long id) {
+        return this.companyRepository.findById(id);
     }
 }

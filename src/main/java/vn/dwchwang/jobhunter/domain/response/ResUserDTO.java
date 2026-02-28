@@ -1,9 +1,10 @@
-package vn.dwchwang.jobhunter.domain.dto;
+package vn.dwchwang.jobhunter.domain.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.dwchwang.jobhunter.domain.Company;
 import vn.dwchwang.jobhunter.util.constant.GenderEnum;
 
 import java.time.Instant;
@@ -20,4 +21,13 @@ public class ResUserDTO {
     private String address;
     private Instant updateAt;
     private Instant createdAt;
+    private CompanyUser company;
+
+    @Getter @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CompanyUser {
+        private long id;
+        private String name;
+    }
 }

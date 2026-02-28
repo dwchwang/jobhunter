@@ -1,4 +1,4 @@
-package vn.dwchwang.jobhunter.domain;
+package vn.dwchwang.jobhunter.domain.response;
 
 public class RestResponse<T> {
     private int statusCode;

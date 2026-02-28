@@ -10,7 +10,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import vn.dwchwang.jobhunter.domain.RestResponse;
+import vn.dwchwang.jobhunter.domain.response.RestResponse;
 import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
 
 @ControllerAdvice

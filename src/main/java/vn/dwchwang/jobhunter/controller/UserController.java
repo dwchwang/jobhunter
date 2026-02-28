@@ -1,7 +1,6 @@
 package vn.dwchwang.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -9,10 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import vn.dwchwang.jobhunter.domain.User;
-import vn.dwchwang.jobhunter.domain.dto.ResCreateUser;
-import vn.dwchwang.jobhunter.domain.dto.ResUpdateUser;
-import vn.dwchwang.jobhunter.domain.dto.ResUserDTO;
-import vn.dwchwang.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.dwchwang.jobhunter.domain.response.ResCreateUserDTO;
+import vn.dwchwang.jobhunter.domain.response.ResUpdateUserDTO;
+import vn.dwchwang.jobhunter.domain.response.ResUserDTO;
+import vn.dwchwang.jobhunter.domain.response.ResultPaginationDTO;
 import vn.dwchwang.jobhunter.service.UserService;
 import vn.dwchwang.jobhunter.util.annotation.ApiMessage;
 import vn.dwchwang.jobhunter.util.error.IdInvalidException;
@@ -32,7 +31,7 @@ public class UserController {
 
     @PostMapping("/users")
     @ApiMessage("Create new user")
-    public ResponseEntity<ResCreateUser> createUser(@RequestBody User inputUser) throws IdInvalidException {
+    public ResponseEntity<ResCreateUserDTO> createUser(@RequestBody User inputUser) throws IdInvalidException {
         Boolean existingUser = this.userService.handleExistsByEmail(inputUser.getEmail());
         if(existingUser) {
             throw new IdInvalidException(
@@ -68,7 +67,7 @@ public class UserController {
 
     @PutMapping("/users")
     @ApiMessage("Update user")
-    public ResponseEntity<ResUpdateUser> updateUser(@RequestBody User inputUser) throws IdInvalidException {
+    public ResponseEntity<ResUpdateUserDTO> updateUser(@RequestBody User inputUser) throws IdInvalidException {
         User existingUser = this.userService.handleUpdateUserById(inputUser);
         if(existingUser == null) {
             throw new IdInvalidException("User voi id: " + inputUser.getId() + " khong ton tai");

@@ -1,4 +1,4 @@
-package vn.dwchwang.jobhunter.domain.dto;
+package vn.dwchwang.jobhunter.domain.response;
 
 
 import lombok.Getter;
@@ -7,8 +7,9 @@ import vn.dwchwang.jobhunter.util.constant.GenderEnum;
 
 import java.time.Instant;
 
-@Setter @Getter
-public class ResCreateUser {
+@Setter
+@Getter
+public class ResCreateUserDTO {
     private long id;
     private String name;
     private String email;
@@ -16,4 +17,12 @@ public class ResCreateUser {
     private GenderEnum gender;
     private String address;
     private Instant createdAt;
+    private CompanyUser company;
+
+    @Setter
+    @Getter
+    public static class CompanyUser {
+        private long id;
+        private String name;
+    }
 }

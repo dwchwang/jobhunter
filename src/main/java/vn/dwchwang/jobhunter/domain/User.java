@@ -21,7 +21,6 @@ public class User {
     private String email;
     private String password;
 
-
     private int age;
 
     @Enumerated(EnumType.STRING)
@@ -38,6 +37,10 @@ public class User {
 
     private  String createdBy;
     private String updatedBy;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     public User() {
     }
