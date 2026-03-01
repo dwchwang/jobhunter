@@ -1,50 +1,56 @@
 package vn.dwchwang.jobhunter.domain;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import vn.dwchwang.jobhunter.util.SecurityUtil;
+import vn.dwchwang.jobhunter.util.constant.LevelEnum;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
+
 @Entity
-@Table(name = "companies")
+@Table(name = "jobs")
 @Getter
 @Setter
-public class Company {
+public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
-    @NotBlank(message = "Ten cong ty ko duoc de trong")
+    private Long id;
+    @NotBlank(message = "Ten khong duoc de trong")
     private String name;
+    private String location;
+    private double salary;
+    private int quantity;
+
+    @Enumerated(EnumType.STRING)
+    private LevelEnum level;
 
     @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
+    private Instant startDate;
+    private Instant endDate;
+    private boolean active;
 
-    private String address;
-
-    private String logo;
-
-//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
-//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant updatedAt;
-
-    private  String createdBy;
+    private String createdBy;
     private String updatedBy;
 
-    @OneToMany( mappedBy = "company", fetch = FetchType.LAZY)
-    @JsonIgnore
-    List<User> users;
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
-    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
-    @JsonIgnore
-    List<Job> jobs;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = {"jobs"})
+    @JoinTable(name = "job_skill", joinColumns = @JoinColumn(name = "job_id"), inverseJoinColumns =
+            @JoinColumn(name = "skill_id"))
+    private List<Skill> skills;
 
     @PrePersist
     public void hanldeBeforeCreated() {
