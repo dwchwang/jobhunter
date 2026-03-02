@@ -1,60 +1,45 @@
 package vn.dwchwang.jobhunter.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import vn.dwchwang.jobhunter.util.SecurityUtil;
-import vn.dwchwang.jobhunter.util.constant.LevelEnum;
+import vn.dwchwang.jobhunter.util.constant.StatusEnum;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.List;
 
 
 @Entity
-@Table(name = "jobs")
+@Table(name = "resumes")
 @Getter
 @Setter
-public class Job {
+public class Resume {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank(message = "Ten khong duoc de trong")
-    private String name;
-    private String location;
-    private double salary;
-    private int quantity;
+
+    @NotBlank(message = "email khong duoc de trong")
+    private String email;
+    @NotBlank(message = "url khong duoc de trong")
+    private String url;
 
     @Enumerated(EnumType.STRING)
-    private LevelEnum level;
-
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String description;
-    private Instant startDate;
-    private Instant endDate;
-    private boolean active;
+    private StatusEnum status;
 
     private Instant createdAt;
     private Instant updatedAt;
-    private String createdBy;
+
+    private  String createdBy;
     private String updatedBy;
 
     @ManyToOne
-    @JoinColumn(name = "company_id")
-    private Company company;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = {"jobs"})
-    @JoinTable(name = "job_skill", joinColumns = @JoinColumn(name = "job_id"), inverseJoinColumns =
-            @JoinColumn(name = "skill_id"))
-    private List<Skill> skills;
-
-    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    @JsonIgnore
-    List<Resume> resumes;
+    @ManyToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
 
     @PrePersist
     public void hanldeBeforeCreated() {
