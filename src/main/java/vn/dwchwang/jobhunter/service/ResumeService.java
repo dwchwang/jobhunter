@@ -70,8 +70,8 @@ public class ResumeService {
     }
 
     public ResUpdateResumeDTO updateResume(Resume updateResume) {
-        updateResume.setUpdatedAt(Instant.now());
-        updateResume.setUpdatedBy(SecurityUtil.getCurrentUserLogin().orElse(""));
+//        updateResume.setUpdatedAt(Instant.now());
+//        updateResume.setUpdatedBy(SecurityUtil.getCurrentUserLogin().orElse(""));
         updateResume = this.resumeRepository.save(updateResume);
         ResUpdateResumeDTO resUpdateResumeDTO = new ResUpdateResumeDTO();
         resUpdateResumeDTO.setId(updateResume.getId());
