@@ -30,93 +30,112 @@ import java.util.stream.Collectors;
 
 @Service
 public class ResumeService {
-    private final ResumeRepository resumeRepository;
-    private final UserRepository userRepository;
-    private final JobRepository jobRepository;
+  private final ResumeRepository resumeRepository;
+  private final UserRepository userRepository;
+  private final JobRepository jobRepository;
 
-    public ResumeService(ResumeRepository resumeRepository, UserService userService, UserRepository userRepository,
-                         JobRepository jobRepository) {
-        this.resumeRepository = resumeRepository;
-        this.userRepository = userRepository;
-        this.jobRepository = jobRepository;
-    }
+  public ResumeService(ResumeRepository resumeRepository, UserService userService, UserRepository userRepository,
+      JobRepository jobRepository) {
+    this.resumeRepository = resumeRepository;
+    this.userRepository = userRepository;
+    this.jobRepository = jobRepository;
+  }
 
+  public boolean checkResumeByUserAndJob(Resume resume) {
+    // check user id
+    if (resume.getUser() == null)
+      return false;
+    Optional<User> userOptional = this.userRepository.findById(resume.getUser().getId());
+    if (userOptional.isEmpty())
+      return false;
 
-    public boolean checkResumeByUserAndJob(Resume resume) {
-        //check user id
-        if(resume.getUser() == null) return false;
-        Optional<User> userOptional = this.userRepository.findById(resume.getUser().getId());
-        if(userOptional.isEmpty()) return false;
+    // check job id
+    if (resume.getJob() == null)
+      return false;
+    Optional<Job> jobOptional = this.jobRepository.findById(resume.getJob().getId());
+    if (jobOptional.isEmpty())
+      return false;
 
-        // check job id
-        if(resume.getJob() == null) return false;
-        Optional<Job> jobOptional = this.jobRepository.findById(resume.getJob().getId());
-        if(jobOptional.isEmpty()) return false;
+    return true;
+  }
 
-        return true;
-    }
+  public ResCreateResumeDTO createResume(Resume resume) {
+    resume = this.resumeRepository.saveAndFlush(resume);
+    ResCreateResumeDTO resCreateResumeDTO = new ResCreateResumeDTO();
+    resCreateResumeDTO.setId(resume.getId());
+    resCreateResumeDTO.setCreatedAt(resume.getCreatedAt());
+    resCreateResumeDTO.setCreatedBy(resume.getCreatedBy());
+    return resCreateResumeDTO;
+  }
 
-    public ResCreateResumeDTO createResume(Resume resume) {
-        resume = this.resumeRepository.saveAndFlush(resume);
-        ResCreateResumeDTO resCreateResumeDTO = new ResCreateResumeDTO();
-        resCreateResumeDTO.setId(resume.getId());
-        resCreateResumeDTO.setCreatedAt(resume.getCreatedAt());
-        resCreateResumeDTO.setCreatedBy(resume.getCreatedBy());
-        return resCreateResumeDTO;
-    }
+  public Optional<Resume> fineResumeById(Long id) {
+    return resumeRepository.findById(id);
+  }
 
-    public Optional<Resume> fineResumeById(Long id) {
-        return resumeRepository.findById(id);
-    }
+  public ResUpdateResumeDTO updateResume(Resume updateResume) {
+    // updateResume.setUpdatedAt(Instant.now());
+    // updateResume.setUpdatedBy(SecurityUtil.getCurrentUserLogin().orElse(""));
+    updateResume = this.resumeRepository.save(updateResume);
+    ResUpdateResumeDTO resUpdateResumeDTO = new ResUpdateResumeDTO();
+    resUpdateResumeDTO.setId(updateResume.getId());
+    resUpdateResumeDTO.setUpdatedAt(updateResume.getUpdatedAt());
+    resUpdateResumeDTO.setUpdatedBy(updateResume.getUpdatedBy());
+    return resUpdateResumeDTO;
+  }
 
-    public ResUpdateResumeDTO updateResume(Resume updateResume) {
-//        updateResume.setUpdatedAt(Instant.now());
-//        updateResume.setUpdatedBy(SecurityUtil.getCurrentUserLogin().orElse(""));
-        updateResume = this.resumeRepository.save(updateResume);
-        ResUpdateResumeDTO resUpdateResumeDTO = new ResUpdateResumeDTO();
-        resUpdateResumeDTO.setId(updateResume.getId());
-        resUpdateResumeDTO.setUpdatedAt(updateResume.getUpdatedAt());
-        resUpdateResumeDTO.setUpdatedBy(updateResume.getUpdatedBy());
-        return resUpdateResumeDTO;
-    }
+  public void deleteResume(Long id) {
+    this.resumeRepository.deleteById(id);
+  }
 
-    public void deleteResume(Long id) {
-        this.resumeRepository.deleteById(id);
-    }
+  public ResGetResumeDTO getResumeById(Resume resume) {
+    ResGetResumeDTO res = new ResGetResumeDTO();
+    res.setId(resume.getId());
+    res.setEmail(resume.getEmail());
+    res.setUrl(resume.getUrl());
+    res.setStatus(resume.getStatus());
+    res.setCreatedAt(resume.getCreatedAt());
+    res.setCreatedBy(resume.getCreatedBy());
+    res.setUpdatedAt(resume.getUpdatedAt());
+    res.setUpdatedBy(resume.getUpdatedBy());
 
-    public ResGetResumeDTO getResumeById(Resume resume) {
-        ResGetResumeDTO res = new ResGetResumeDTO();
-        res.setId(resume.getId());
-        res.setEmail(resume.getEmail());
-        res.setUrl(resume.getUrl());
-        res.setStatus(resume.getStatus());
-        res.setCreatedAt(resume.getCreatedAt());
-        res.setCreatedBy(resume.getCreatedBy());
-        res.setUpdatedAt(resume.getUpdatedAt());
-        res.setUpdatedBy(resume.getUpdatedBy());
+    res.setUser(new ResGetResumeDTO.UserResume(resume.getUser().getId(), resume.getUser().getName()));
+    res.setJob(new ResGetResumeDTO.JobResume(resume.getJob().getId(), resume.getJob().getName()));
 
-        res.setUser(new ResGetResumeDTO.UserResume(resume.getUser().getId(), resume.getUser().getName()));
-        res.setJob(new ResGetResumeDTO.JobResume(resume.getJob().getId(), resume.getJob().getName()));
+    return res;
+  }
 
-        return res;
-    }
+  public ResultPaginationDTO hanldeGetAllComapnies(Specification<Resume> spec, Pageable pageable) {
+    Page<Resume> pageResume = this.resumeRepository.findAll(spec, pageable);
+    ResultPaginationDTO dto = new ResultPaginationDTO();
+    ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
+    meta.setPage(pageable.getPageNumber() + 1);
+    meta.setPageSize(pageable.getPageSize());
 
-    public ResultPaginationDTO hanldeGetAllComapnies(Specification<Resume> spec, Pageable pageable) {
-        Page<Resume> pageResume = this.resumeRepository.findAll(spec, pageable);
-        ResultPaginationDTO dto = new ResultPaginationDTO();
-        ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
-        meta.setPage(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
+    meta.setPages(pageResume.getTotalPages());
+    meta.setTotal(pageResume.getTotalElements());
+    dto.setMeta(meta);
 
-        meta.setPages(pageResume.getTotalPages());
-        meta.setTotal(pageResume.getTotalElements());
-        dto.setMeta(meta);
+    List<ResGetResumeDTO> resGetResumeDTO = pageResume.getContent()
+        .stream()
+        .map(item -> this.getResumeById(item))
+        .toList();
+    dto.setResult(resGetResumeDTO);
+    return dto;
+  }
 
-        List<ResGetResumeDTO> resGetResumeDTO = pageResume.getContent()
-                                                                  .stream()
-                                                                          .map(item -> this.getResumeById(item))
-                                                                  .toList();
-        dto.setResult(resGetResumeDTO);
-        return dto;
-    }
+  public ResultPaginationDTO fetchResumesByUser(User user, Pageable pageable) {
+    List<Resume> resumes = this.resumeRepository.findByUserId(user.getId());
+    ResultPaginationDTO dto = new ResultPaginationDTO();
+    ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
+    meta.setPage(1);
+    meta.setPageSize(resumes.size());
+    meta.setPages(1);
+    meta.setTotal(resumes.size());
+    dto.setMeta(meta);
+    List<ResGetResumeDTO> result = resumes.stream()
+        .map(this::getResumeById)
+        .collect(Collectors.toList());
+    dto.setResult(result);
+    return dto;
+  }
 }

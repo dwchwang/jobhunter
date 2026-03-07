@@ -1,6 +1,5 @@
 package vn.dwchwang.jobhunter.config;
 
-
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,69 +30,69 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
-        String[] whiteList = {
-                "/",
-                "api/v1/auth/login", "/api/v1/auth/refresh", "/storage/**",
-        };
-        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(
-                    authz -> authz
-                            .requestMatchers(whiteList).permitAll()
-                            .anyRequest().authenticated())
-                            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())
-                                                                  .authenticationEntryPoint(customAuthenticationEntryPoint))
-//                .exceptionHandling(exceptions -> exceptions
-//                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()) //401
-//                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) //403
-            .formLogin(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http,
+      CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    String[] whiteList = {
+        "/",
+        "/api/v1/auth/login", "/api/v1/auth/refresh", "/storage/**",
+        "/api/v1/auth/register",
+    };
+    http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(
+        authz -> authz
+            .requestMatchers(whiteList).permitAll()
+            .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())
+            .authenticationEntryPoint(customAuthenticationEntryPoint))
+        // .exceptionHandling(exceptions -> exceptions
+        // .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()) //401
+        // .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) //403
+        .formLogin(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+    return http.build();
+  }
 
-        return http.build();
-    }
+  @Bean
+  public JwtEncoder jwtEncoder() {
+    return new NimbusJwtEncoder(new ImmutableSecret<>(getSecretKey()));
+  }
 
-    @Bean
-    public JwtEncoder jwtEncoder() {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(getSecretKey()));
-    }
+  @Value("${jwt.base64-secret}")
+  private String jwtKey;
 
-    @Value("${jwt.base64-secret}")
-    private String jwtKey;
+  private SecretKey getSecretKey() {
+    byte[] keyBytes = Base64.from(jwtKey).decode();
+    return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
+  }
 
-    private SecretKey getSecretKey() {
-        byte[] keyBytes = Base64.from(jwtKey).decode();
-        return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
-    }
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
+        .macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
+    return token -> {
+      try {
+        return jwtDecoder.decode(token);
+      } catch (Exception e) {
+        System.out.println(">>> JWT error: " + e.getMessage());
+        throw e;
+      }
+    };
+  }
 
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
-                                                      .macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
-        return token -> {
-            try {
-                return jwtDecoder.decode(token);
-            } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
-                throw e;
-            }
-        };
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
-    }
+  @Bean
+  public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+    grantedAuthoritiesConverter.setAuthorityPrefix("");
+    grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
+    JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+    jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+    return jwtAuthenticationConverter;
+  }
 
 }

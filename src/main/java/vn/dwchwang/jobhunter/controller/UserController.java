@@ -1,6 +1,9 @@
 package vn.dwchwang.jobhunter.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.turkraft.springfilter.boot.Filter;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,48 @@ public class UserController {
     public UserController(UserService userService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    // DTO for register request from FE (fullName, email, password, phone)
+    @Getter
+    @Setter
+    public static class RegisterRequest {
+        private String fullName;
+        private String email;
+        private String password;
+        private String phone;
+    }
+
+    // DTO for register response (uses _id to match FE expectation)
+    @Getter
+    @Setter
+    public static class RegisterResponse {
+        @JsonProperty("_id")
+        private long id;
+        private String name;
+        private String email;
+    }
+
+    @PostMapping("/user/register")
+    @ApiMessage("Register new user")
+    public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest req) throws IdInvalidException {
+        Boolean existingUser = this.userService.handleExistsByEmail(req.getEmail());
+        if (existingUser) {
+            throw new IdInvalidException(
+                    "Email " + req.getEmail() + " đã tồn tại, hãy dùng email khác"
+            );
+        }
+        User newUser = new User();
+        newUser.setName(req.getFullName());
+        newUser.setEmail(req.getEmail());
+        newUser.setPassword(this.passwordEncoder.encode(req.getPassword()));
+        this.userService.handleCreateUser(newUser);
+
+        RegisterResponse res = new RegisterResponse();
+        res.setId(newUser.getId());
+        res.setName(newUser.getName());
+        res.setEmail(newUser.getEmail());
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
     @PostMapping("/users")

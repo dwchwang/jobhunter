@@ -44,9 +44,9 @@ public class RoleController {
         }
 
         //check name
-        if(this.roleService.existByName(role.getName())){
-            throw new IdInvalidException("role voi name " + role.getName() + "da ton tai");
-        }
+//        if(this.roleService.existByName(role.getName())){
+//            throw new IdInvalidException("role voi name " + role.getName() + "da ton tai");
+//        }
         return ResponseEntity.ok().body(this.roleService.update(role));
     }
 
